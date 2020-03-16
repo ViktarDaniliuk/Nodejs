@@ -34,7 +34,7 @@ const sorter = (path, newPath) => {
                         fs.rename(`${__dirname}/${path}/${item}`, `${__dirname}/${newPath}/${item.slice(0,1).toUpperCase()}/${item}`, err => {
                            if (err) throw err;
                         });
-                     }
+                     };
                   };
                });
             });
