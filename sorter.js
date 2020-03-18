@@ -1,18 +1,27 @@
 const fs = require('fs');
 
+const moveFile = (path, newFolderName, file) => {
+   fs.rename(path, `${newFolderName}/${file}`, err => {
+      if (err) throw err;
+   });
+}
+
 const sorter = (path, newPath) => {
    const newFolders = new Set();
-
+   
    fs.mkdir(`${__dirname}/${newPath}`, err => {
       if (err) throw err;
-
+      
       const readDir = (path) => {
-   
+         
          fs.readdir(`${__dirname}/${path}`, (err, data) => {
             if (err) throw err;
-   
+            
             data.forEach((item, i) => {
-               fs.stat(`${__dirname}/${path}/${item}`, (err, stats) => {
+               const pathToItem = `${__dirname}/${path}/${item}`;
+               const firstLetterOfTheFileName = `${__dirname}/${newPath}/${item.slice(0,1).toUpperCase()}`;
+
+               fs.stat(pathToItem, (err, stats) => {
                   if (err) throw err;
                   
                   if (stats.isDirectory()) {
@@ -23,17 +32,13 @@ const sorter = (path, newPath) => {
                      if (!newFolders.has(item.slice(0,1).toUpperCase())) {
                         newFolders.add(item.slice(0,1).toUpperCase());
                         
-                        fs.mkdir(`${__dirname}/${newPath}/${item.slice(0,1).toUpperCase()}`, err => {
+                        fs.mkdir(firstLetterOfTheFileName, err => {
                            if (err) throw err;
-                           
-                           fs.rename(`${__dirname}/${path}/${item}`, `${__dirname}/${newPath}/${item.slice(0,1).toUpperCase()}/${item}`, err => {
-                              if (err) throw err;
-                           });
+
+                           moveFile(pathToItem, firstLetterOfTheFileName, item);
                         });
                      } else {
-                        fs.rename(`${__dirname}/${path}/${item}`, `${__dirname}/${newPath}/${item.slice(0,1).toUpperCase()}/${item}`, err => {
-                           if (err) throw err;
-                        });
+                        moveFile(pathToItem, firstLetterOfTheFileName, item);
                      };
                   };
                });
