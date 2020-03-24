@@ -1,59 +1,46 @@
-require('dotenv').config()
+require('dotenv').config();
+const { format } = require('date-fns');
 const http = require('http');
-const express = require('express');
-const app = express();
 const PORT = process.env.PORT;
 const delayInterval = process.env.DELAYINTERVAL;
 const delayTimeout = process.env.DELAYTIMEOUT;
-
-// app.get('/', (req, res) => {
-//    let currentTime = null;
-   
-//    const timer = setInterval(() => {
-//       currentTime = new Date();
-//       currentUTCTime = `${currentTime.getUTCFullYear()}-${currentTime.getUTCMonth() + 1}-${currentTime.getUTCDate()} ${currentTime.getUTCHours()}:${currentTime.getUTCMinutes()}:${currentTime.getUTCSeconds()}`;
-
-//       console.log(currentUTCTime);
-//    }, delayInterval);
-
-//    setTimeout(() => {
-//       clearInterval(timer);
-//       res.setHeader('Content-Type', 'text/html; charset=utf-8');
-//       res.statusCode = 200;
-//       res.end(`<h1>${currentUTCTime}</h1>`);
-//    }, delayTimeout);
-// });
-
-// app.listen(PORT);
+let timer = null;
+let counter = 0;
+let timeout = null;
+let currentUTCTime = null;
 
 const server = http.createServer((req, res) => {
+         let currentTime = null;
    
-   if (req.url === '/') {
-      let currentTime = null;
-      let timer = null;
-      let timeout = null;
+         console.log('Запрос номер: ', ++counter);
 
-      if (!timer && !timeout) {
+         if (timeout) clearTimeout(timeout);
+         
+         res.writeHead(200, { 
+            'Cache-Control': 'no-cache, no-store',
+            'Content-Type': 'text/html; charset=utf-8',
+            });
+   
+      if (!timer) {
          timer = setInterval(() => {
             currentTime = new Date();
-            currentUTCTime = `${currentTime.getUTCFullYear()}-${currentTime.getUTCMonth() + 1}-${currentTime.getUTCDate()} ${currentTime.getUTCHours()}:${currentTime.getUTCMinutes()}:${currentTime.getUTCSeconds()}`;
-
+            currentUTCTime = format(new Date(), 'RRRR-LL-dd HH:mm:ss');
+   
             console.log(currentUTCTime);
          }, delayInterval);
-   
-         timeout = setTimeout(() => {
-            clearInterval(timer);
-            res.setHeader('Content-Type', 'text/html; charset=utf-8');
-            res.statusCode = 200;
-            res.end(`<h1>${currentUTCTime}</h1>`);
-            server.close();
+
+         setTimeout(() => {
+            console.log('response');
+            res.write(`<h1>${currentUTCTime}</h1>`);
          }, delayTimeout);
-      };
-   } 
-   else if (req.url === '/favicon.ico') {
-      process.exit();
-   };
-});
+      }
+      timeout = setTimeout(() => {
+         console.log('clearInterval');
+         res.end(`<h1>${currentUTCTime}</h1>`);
+         server.close();
+         clearInterval(timer);
+      }, delayTimeout);
+   });
 
 server.listen(PORT, () => {
    console.log('Сервер работает');
