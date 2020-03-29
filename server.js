@@ -17,7 +17,7 @@ const server = http.createServer((req, res) => {
          if (timeout) clearTimeout(timeout);
          
          res.writeHead(200, { 
-            'Cache-Control': 'no-cache, no-store',
+            'Cache-Control': 'no-cache, max-age="0", no-store',
             'Content-Type': 'text/html; charset=utf-8',
             });
    
