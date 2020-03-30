@@ -1,0 +1,12 @@
+extends ../_template
+
+block variables
+  - var title = 'Error page'
+
+block content
+  .wrapper
+    section.error-content
+      .container.error-content__container
+        a(href="/").title-name.error-link На главную
+        h1.error-title #{error}
+        h3.error-message #{message}
