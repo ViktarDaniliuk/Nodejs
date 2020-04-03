@@ -39,7 +39,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function (req, res) {
    const storage = require('./storage/storage');
 
-   res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash().email });
+   const data = { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash('email')[0] };
+   console.log(data);
+
+   res.render('index', data);
 });
 
 app.post('/', function (req, res) {
@@ -70,7 +73,7 @@ app.post('/login', function (req, res) {
 
 app.get('/admin', function (req, res) {
    const storage = require('./storage/storage');
-console.log(req.session.isAuth);
+
    if (req.session.isAuth) {
       res.render('admin', { skills: storage.getSkills().skills });
    }
@@ -91,7 +94,7 @@ app.use('/admin/upload', fileUpload(), function (req, res) {
    
    if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).send('No files were uploaded.');
-   }
+   };
    
    let sampleFile = req.files.photo;
    
@@ -108,8 +111,6 @@ app.use('/admin/upload', fileUpload(), function (req, res) {
 
    res.redirect(301, '/admin');
 });
-
-// app.use('/', require('./routes/index'));
 
 app.use((req, res, next) => {
    let err = new Error('Not Found');

@@ -72,6 +72,11 @@
       "src": "./img/products/Work9.jpg",
       "name": "Вино вдохновение",
       "price": 600
+    },
+    {
+      "src": "./img/products/IMG_20180907_112424.jpg",
+      "name": "Lamborghini",
+      "price": "150 000$"
     }
   ]
 }
