@@ -5,6 +5,13 @@ const FileSync = require('lowdb/adapters/FileSync');
 const adapter = new FileSync(path.join(__dirname, 'storage.json'));
 const db = low(adapter);
 
+module.exports.getAdminData = () => {
+
+   return {
+      admin: db.get("admin").value()
+   };
+};
+
 module.exports.getSkills = () => {
 
    return {
@@ -20,4 +27,21 @@ module.exports.setSkills = (objSkills) => {
          .assign({ number: parseInt(newValue) })
          .write();
    })
+};
+
+module.exports.getProducts = () => {
+
+   return {
+      products: db.get("products").value()
+   };
+};
+
+module.exports.setProducts = (objProducts) => {
+   db.get("products")
+      .push({ 
+         "src": `${objProducts.src}`,
+         "name": `${objProducts.name}`,
+         "price": `${objProducts.price}`
+   })
+      .write()
 };
