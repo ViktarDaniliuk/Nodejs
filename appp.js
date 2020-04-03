@@ -39,14 +39,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', function (req, res) {
    const storage = require('./storage/storage');
 
-   res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash().email });
+   res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash('email')[0] });
 });
 
 app.post('/', function (req, res) {
    // const storage = require('./storage/storage');
    console.log(req.body);
 
-   req.flash('email', 'Hi there!');
+   req.flash('email', 'Сообщение отправлено успешно.');
    res.redirect(301, '/');
    // res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash('msgsemail') });
 });
@@ -70,7 +70,7 @@ app.post('/login', function (req, res) {
 
 app.get('/admin', function (req, res) {
    const storage = require('./storage/storage');
-console.log(req.session.isAuth);
+
    if (req.session.isAuth) {
       res.render('admin', { skills: storage.getSkills().skills });
    }
@@ -91,7 +91,7 @@ app.use('/admin/upload', fileUpload(), function (req, res) {
    
    if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).send('No files were uploaded.');
-   }
+   };
    
    let sampleFile = req.files.photo;
    
