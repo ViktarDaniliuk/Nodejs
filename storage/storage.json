@@ -8,17 +8,17 @@
   "skills": [
     {
       "id": "age",
-      "number": 20,
+      "number": 10,
       "text": "Возраст начала занятий на скрипке"
     },
     {
       "id": "concerts",
-      "number": 1,
+      "number": 10,
       "text": "Концертов отыграл"
     },
     {
       "id": "cities",
-      "number": 50,
+      "number": 30,
       "text": "Максимальное число городов в туре"
     },
     {
