@@ -5,9 +5,15 @@ const PORT = process.env.PORT;
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const fileUpload = require('express-fileupload');
-// const formidable = require('formidable');
+const cookieParser = require('cookie-parser');
+const flash = require('connect-flash');
 
 const app = express();
+
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
+
+app.use(cookieParser());
 
 sessionMW = session({
    secret: "common:session",
@@ -15,36 +21,34 @@ sessionMW = session({
    cookie: {
       path: "/",
       httpOnly: true,
-      maxAge: 24 * 60 * 60 * 1000
+      maxAge: 86400000
    },
    saveUninitialized: false,
    resave: false
 });
 
-
 app.use(sessionMW);
+
+app.use(flash());
 
 app.set('view engine', 'pug');
 app.set('views', path.join(__dirname, 'source', 'template', 'pages'));
 
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-
-app.use(fileUpload());
-
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', function (req, res) {
-   const skills = require('./storage/storage');
+   const storage = require('./storage/storage');
 
-   res.render('index', { skills: skills.getSkills().skills });
+   res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash().email });
 });
 
 app.post('/', function (req, res) {
-   const skills = require('./storage/storage');
+   // const storage = require('./storage/storage');
    console.log(req.body);
 
-   res.render('index', { skills: skills.getSkills().skills });
+   req.flash('email', 'Hi there!');
+   res.redirect(301, '/');
+   // res.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: req.flash('msgsemail') });
 });
 
 app.get('/login', function (req, res) {
@@ -52,45 +56,51 @@ app.get('/login', function (req, res) {
 });
 
 app.post('/login', function (req, res) {
-   console.log(req.body);
-
-   if (req.body.email === 'dvs@mail.ru' && req.body.password === '123') {
-      req.session.isAuth = true;
-      res.redirect(301, '/admin');
-   }
+   const storage = require('./storage/storage');
+   const adminData = storage.getAdminData().admin[0];
+   console.log('req.body: ', req.body);
    
-   res.redirect(301, '/');
+   if (req.body.email === adminData.email && req.body.password === adminData.password) {
+      req.session.isAuth = true;
+      return res.redirect(301, '/admin');
+   }
+   res.render('login');
+   // res.redirect(301, '/');
 });
 
 app.get('/admin', function (req, res) {
-   const skills = require('./storage/storage');
-
+   const storage = require('./storage/storage');
+console.log(req.session.isAuth);
    if (req.session.isAuth) {
-      res.render('admin', { skills: skills.getSkills().skills });
+      res.render('admin', { skills: storage.getSkills().skills });
    }
 });
 
 app.post('/admin/skills', function (req, res) {
    console.log(req.body);
-   const skills = require('./storage/storage')
+   const storage = require('./storage/storage')
 
-   skills.setSkills(req.body);
+   storage.setSkills(req.body);
 
    res.redirect(301, '/admin');
 });
 
-app.post('/admin/upload', function (req, res) {
-   console.log(req.body);
-   console.log(req.files);
+app.use('/admin/upload', fileUpload(), function (req, res) {
+   const storage = require('./storage/storage');
+   const product = {};
    
-   if (!req.body.photo || Object.keys(req.body).length === 0) {
+   if (!req.files || Object.keys(req.files).length === 0) {
       return res.status(400).send('No files were uploaded.');
    }
    
-   let sampleFile = req.body.photo;
-   console.log('sampleFile: ', sampleFile);
+   let sampleFile = req.files.photo;
+   
+   product.src = `./img/products/${req.files.photo.name}`;
+   product.name = req.body.name;
+   product.price = req.body.price;
+   storage.setProducts(product);
 
-   sampleFile.mv('/public/img/products/filename.jpg', function(err) {
+   sampleFile.mv(`${__dirname}/public/img/products/${req.files.photo.name}`, function(err) {
       if (err) return res.status(500).send(err);
 
       // res.send('File uploaded!');
@@ -98,48 +108,6 @@ app.post('/admin/upload', function (req, res) {
 
    res.redirect(301, '/admin');
 });
-
-// app.post('/admin/upload', (req, res, next) => {
-//    console.log('upload')
-//    const form = formidable({ multiples: true });
-  
-//    form.parse(req, (err, fields, files) => {
-//      if (err) {
-//        next(err);
-//        return;
-//      }
-//      console.log({ fields, files });
-//    });
-//  });
-
-// app.post('/admin/upload', function (req, res) {
-
-//    console.log(req.body);
-//    console.log(req.body.photo);
-
-//    // if (!req.body.photo) {
-//    //    return res.status(400).send('No files were uploaded.');
-//    // }
-
-//    // let photo = req.body.photo;
-
-//    // photo.mv('/public/img/products/filename.jpg', function(err) {
-//    //    if (err) return res.status(500).send(err);
-
-//    //    // res.send('File uploaded!');
-//    // });
-
-//       const form = formidable({ multiples: true });
-   
-//       form.parse(req, (err, fields, files) => {
-//          res.writeHead(200, { 'content-type': 'application/json' });
-//          console.log(JSON.stringify({ fields, files }, null, 2));
-//       });
-
-//    res.redirect(301, '../admin');
-// });
-
-app.use('/', require('./routes/index'));
 
 app.use((req, res, next) => {
    let err = new Error('Not Found');
