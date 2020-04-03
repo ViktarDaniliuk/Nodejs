@@ -52,7 +52,7 @@ app.post('/', function (req, res) {
 });
 
 app.get('/login', function (req, res) {
-   res.render('login');
+   res.render('login', { msgslogin: req.flash('msgslogin')[0] });
 });
 
 app.post('/login', function (req, res) {
@@ -61,6 +61,7 @@ app.post('/login', function (req, res) {
    console.log('req.body: ', req.body);
    
    if (req.body.email === adminData.email && req.body.password === adminData.password) {
+      req.flash('msgslogin', 'Логирование прошло успешно.');
       req.session.isAuth = true;
       return res.redirect(301, '/admin');
    }
@@ -72,7 +73,7 @@ app.get('/admin', function (req, res) {
    const storage = require('./storage/storage');
 
    if (req.session.isAuth) {
-      res.render('admin', { skills: storage.getSkills().skills });
+      res.render('admin', { skills: storage.getSkills().skills, msgskill: req.flash('msgskill')[0], msgfile: req.flash('msgfile')[0] });
    }
 });
 
@@ -82,6 +83,7 @@ app.post('/admin/skills', function (req, res) {
 
    storage.setSkills(req.body);
 
+   req.flash('msgskill', 'Данные изменены успешно.');
    res.redirect(301, '/admin');
 });
 
@@ -102,10 +104,9 @@ app.use('/admin/upload', fileUpload(), function (req, res) {
 
    sampleFile.mv(`${__dirname}/public/img/products/${req.files.photo.name}`, function(err) {
       if (err) return res.status(500).send(err);
-
-      // res.send('File uploaded!');
    });
-
+   
+   req.flash('msgfile', 'Продукт добавлен успешно.');
    res.redirect(301, '/admin');
 });
 
