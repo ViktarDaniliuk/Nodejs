@@ -8,12 +8,12 @@
   "skills": [
     {
       "id": "age",
-      "number": 20,
+      "number": 30,
       "text": "Возраст начала занятий на скрипке"
     },
     {
       "id": "concerts",
-      "number": 1,
+      "number": 30,
       "text": "Концертов отыграл"
     },
     {
@@ -72,11 +72,6 @@
       "src": "./img/products/Work9.jpg",
       "name": "Вино вдохновение",
       "price": 600
-    },
-    {
-      "src": "./img/products/IMG_20180907_112424.jpg",
-      "name": "Lamborghini",
-      "price": "150 000$"
     }
   ]
 }

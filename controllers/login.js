@@ -1,14 +1,17 @@
-module.exports.get = function (req, res) {
-   res.render('login');
+module.exports.get = async (ctx, next) => {
+   await ctx.render('login', { msgslogin: ctx.flash('msgslogin')[0] });
 };
 
-module.exports.post = function (req, res) {
-   console.log(req.body);
+module.exports.post = async (ctx, next) => {
+   const storage = require('../storage/storage');
+   const adminData = storage.getAdminData().admin[0];
+   console.log(ctx.request.body);
 
-   if (req.body.email === 'dvs@mail.ru' && req.body.password === '123') {
-      req.session.isAuth = true;
-      res.redirect(301, '/admin');
-   }
-   
-   res.redirect(301, '/');
+   if (ctx.request.body.email === adminData.email && ctx.request.body.password === adminData.password) {
+      ctx.flash('msgslogin', 'Логирование прошло успешно.');
+      ctx.session.isAuth = true;
+      return ctx.redirect('/admin');
+   };
+
+   await ctx.render('login');
 };

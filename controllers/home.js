@@ -1,12 +1,12 @@
-module.exports.get = function (req, res) {
-  const skills = require('../storage/storage');
+module.exports.get = async (ctx, next) => {
+  const storage = require('../storage/storage');
 
-  res.render('index', { skills: skills.getSkills().skills });
+  await ctx.render('index', { skills: storage.getSkills().skills, products: storage.getProducts().products, msgsemail: ctx.flash('email')[0] });
 };
 
-module.exports.post = function (req, res) {
-  const skills = require('../storage/storage');
-  console.log(req.body);
+module.exports.post = async(ctx, next) => {
+  console.log(ctx.request.body);
 
-  res.render('index', { skills: skills.getSkills().skills });
+  ctx.flash('email', 'Сообщение отправлено успешно.');
+  ctx.redirect('/');
 };

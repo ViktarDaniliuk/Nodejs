@@ -1,5 +1,5 @@
-const express = require('express');
-const router = express.Router();
+const Router = require('koa-router');
+const router = new Router();
 
 const ctrlHome = require('../controllers/home');
 const ctrlLogin = require('../controllers/login');

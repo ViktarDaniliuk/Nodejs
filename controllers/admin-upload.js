@@ -1,18 +1,13 @@
-module.exports.post = function (req, res) {
-   console.log(req.body);
-   console.log(req.files);
-
-   if (!req.files || Object.keys(req.files).length === 0) {
-      return res.status(400).send('No files were uploaded.');
-   }
-
-   let sampleFile = req.files.sampleFile;
-
-   sampleFile.mv('/public/img/products/filename.jpg', function(err) {
-      if (err) return res.status(500).send(err);
-
-      // res.send('File uploaded!');
-   });
-
-   res.redirect(301, '../admin');
+module.exports.post = async (ctx, next) => {
+   const storage = require('../storage/storage');
+   const product = {};
+   const path = ctx.request.files.photo.path;
+   
+   product.src = `./img/products/${path.slice(path.lastIndexOf('\\') + 1)}`;
+   product.name = ctx.request.body.name;
+   product.price = ctx.request.body.price;
+   storage.setProducts(product);
+   
+   ctx.flash('msgfile', 'Продукт добавлен успешно.');
+   ctx.redirect('/admin');
 };
