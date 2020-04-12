@@ -1,0 +1,41 @@
+{
+  "name": "nodejs",
+  "version": "1.0.0",
+  "description": "![Скриншот проекта](https://loftschool.com/uploads/course_logos/nodejs.svg?v=1513152963369)",
+  "main": "app.js",
+  "dependencies": {
+    "date-fns": "^2.11.0",
+    "dotenv": "^8.2.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-node": "^11.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "koa": "^2.11.0",
+    "koa-body": "^4.1.1",
+    "koa-bodyparser": "^4.3.0",
+    "koa-connect-flash": "^0.1.2",
+    "koa-generic-session": "^2.0.4",
+    "koa-pug": "^4.0.3",
+    "koa-router": "^8.0.8",
+    "koa-static": "^5.0.0",
+    "lowdb": "^1.0.0",
+    "nodemon": "^2.0.2",
+    "path": "^0.12.7",
+    "pug": "^2.0.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ViktarDaniliuk/Nodejs.git"
+  },
+  "author": "Viktar Daniliuk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ViktarDaniliuk/Nodejs/issues"
+  },
+  "homepage": "https://github.com/ViktarDaniliuk/Nodejs#readme"
+}

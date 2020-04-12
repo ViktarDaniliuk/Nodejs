@@ -1,0 +1,82 @@
+{
+  "admin": [
+    {
+      "email": "dvs@mail.ru",
+      "password": "123123"
+    }
+  ],
+  "skills": [
+    {
+      "id": "age",
+      "number": 30,
+      "text": "Возраст начала занятий на скрипке"
+    },
+    {
+      "id": "concerts",
+      "number": 30,
+      "text": "Концертов отыграл"
+    },
+    {
+      "id": "cities",
+      "number": 50,
+      "text": "Максимальное число городов в туре"
+    },
+    {
+      "id": "years",
+      "number": 10,
+      "text": "Лет на сцене в качестве скрипача"
+    }
+  ],
+  "products": [
+    {
+      "src": "./img/products/Work1.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work2.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work3.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work4.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work5.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work6.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work7.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work8.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/Work9.jpg",
+      "name": "Вино вдохновение",
+      "price": 600
+    },
+    {
+      "src": "./img/products/upload_b4390db797564207091a67e9321e9f7c.jpg",
+      "name": "Lamborghini",
+      "price": "35000"
+    }
+  ]
+}
