@@ -1,116 +1,134 @@
-# Домашнее задание курса Node.js (3 и 4)
+## LoftSchool
 
-![Скриншот проекта](https://loftschool.com/uploads/course_logos/nodejs.svg?v=1513152963369)
+Большая домашняя работа курса по Node.js - Корпоративная система _"LoftSystem"_.
 
-> Для запуска:
+### Задача
 
-0. git clone https://krabaton@bitbucket.org/krabaton/nodejs-hw34.git
-1. npm i (yarn)
-1. npm start
+В папке ./build находится подготовленная frontend-часть проекта, ваша задача - реализовать backend.
 
-> Для сборки проекта под Express(Koa.js) (папки public, source/template -> views):
-
-    npm run build
-
-Он создаст папку со статикой public. Шаблоны Pug лежат в папке source/template
-
-### Проект состоит из трех страниц
-
-- index.html
-- login.html
-- admin.html
-
-> Итоговый url при обращении к странице должен быть без расширения html (пример: localhost/login)
-> В сборке используется шаблонизатор PUG, но можно использовать любой другой на стороне сервера.
-> npm run build создаст в папке public файлы html, которые можно использовать под шаблонизаторы hbs или ejs
-
-#### На странице login.html - POST запрос url = '/login'
-
-Отправляет на сервер поля
-
-```
+1.  Выберите фреймворк - [Express.js](http://expressjs.com/ru/) или [Koa.js](http://koajs.com/).
+2.  Выберите базу данных - MongoDB (рекомедуемая ORM - [Mongoose](http://mongoosejs.com/)) или PostgreSQL (рекомедуемая ORM - [Sequelize](http://docs.sequelizejs.com/)).
+3.  Подготовьте http-сервер, который на любой get-запрос вернет index.html (маршрутизация выполняется на frontend'e средствами бибилиотеки react-router).
+4.  Реализуйте логику обработки 12 различных запросов:
+    - POST-запрос на `/api/registration` - создание нового пользователя (регистрация). Сигнатура запроса: `{ username, surName, firstName, middleName, password }`. Необходимо вернуть объект авторизовавшегося пользователя.
+    - POST-запрос на `/api/login` - авторизация после пользователького ввода. Cигнатура запроса: `{ username, password }` Необходимо вернуть объект авторизовавшегося пользователя.
+    - POST-запрос на `/api/refresh-token` - обновление access-токена. В headers['authorization'] прикрепить refresh-токен. Вернуть обьект с токенами
+    - GET-запрос на `/api/profile` - авторизация при наличии токена. Необходимо вернуть объект пользователя.
+    - PATCH-запрос на `/api/profile` - обновление информации о пользователе.
+        Сигнатура запроса:
+        ```
+        {
+            firstName: String,
+            middleName: String,
+            surName: String,
+            oldPassword: String,
+            newPassword: String,
+            avatar: File
+        }
+        ```
+        Необходимо вернуть объект обновленного пользователя.
+    - DELETE-запрос на `/api/users/:id` - удаление пользователя.
+    - GET-запрос на `/api/news` - получение списка новостей. Необходимо вернуть список всех новостей из базы данных.
+    - POST-запрос на `/api/news` - создание новой новости. Сигнатура запроса: `{ text, title }`. Необходимо вернуть обновленный список всех новостей из базы данных.
+    - PATCH-запрос на `/api/news/:id` - обновление существующей новости. Сигнатура запроса: `{ text, title }`. Необходимо вернуть обновленный список всех новостей из базы данных.
+    - DELETE-запрос на `/api/news/:id` - удаление существующей новости. Необходимо вернуть обновленный список всех новостей из базы данных.
+    - Автоматический GET-запрос на `/api/users` - получение списка пользователей. Необходимо вернуть список всех пользоватлей из базы данных.
+    - PATCH-запрос на `/api/users/:id/permission` - обновление существующей записи о разрешениях конкретного пользователя. Сигнатура:
+    ```
     {
-      email,
-      password
+        permission: {
+            chat: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+            news: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+            settings: { C: Boolean, R: Boolean, U: Boolean, D: Boolean }
+        }
     }
+    ```
+> Обьект пользователя:
 ```
-
----
-
-#### На странице index.html - POST запрос url = '/'
-
-Отправляется на сервер поля
-
-```
-    {
-      name - 'Имя отправителя',
-      email - 'Email пользователя',
-      message - 'Сообщение от пользователя'
+{
+    firstName: String,
+    id: Primary key,
+    image: String,
+    middleName: String,
+    permission: {
+        chat: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+        news: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+        settings: { C: Boolean, R: Boolean, U: Boolean, D: Boolean }
     }
+    surName: String,
+    username: String
+}
+```
+> Обьект авторизованного пользователя:
+```
+{
+    firstName: String,
+    id: Primary key,
+    image: String,
+    middleName: String,
+    permission: {
+        chat: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+        news: { C: Boolean, R: Boolean, U: Boolean, D: Boolean },
+        settings: { C: Boolean, R: Boolean, U: Boolean, D: Boolean }
+    }
+    surName: String,
+    username: String,
+
+    accessToken: String,
+        refreshToken: String,
+        accessTokenExpiredAt: Date (ms),
+        refreshTokenExpiredAt: Date (ms)
+}
+```
+> Обьект новости:
+```
+{
+    id: Primary key,
+    created_at: Date,
+    text: String,
+    title: String,
+    user: {
+        firstName: String,
+        id: Key,
+        image: String,
+        middleName: String,
+        surName: String,
+        username: String
+    }
+}
+```
+> Обьект с токенами:
+```
+{
+    accessToken: String,
+    refreshToken: String,
+    accessTokenExpiredAt: Date (ms),
+    refreshTokenExpiredAt: Date (ms)
+}
+```
+> (Более подробную информацию о url, дополнительных параметрах и передаваемых данных запроса вы можете получить через средства разработчика при взаимодействии с интерфейсом).
+
+5.  Реализуйте логику взаимодействия frontend и backend частей между собой с помощью socket. Необходимо для реализации чата. У вас далжен быть хеш-объект, в который вы запишите все активные подключения в формате:
+
+```
+{ #socketId: {
+  username: #username,
+  socketId: #socketId,
+  userId: #userId,
+  activeRoom: null // По умолчанию
+  },
+  ...
+}
 ```
 
----
+Ваше socket-подключение должно обрабатывать следующие события:
 
-#### На странице admin.html - POST запрос url = '/admin/upload'
+- `users:connect`, инициируется при подключении пользователя. Необходимо создать объект пользователя и сохранить в нем socketId сокета, userId пользователя и имя пользователя, как свойства, обновить общий объект, и отправить его, в виде массива, только что подключившемуся пользователю (с помощью события `users:list`) и разослать всем подключенным сокетам объект нового пользователя (с помощью события `users:add`).
+- `message:add`, инициируется при отправке одним из пользователей сообщения другому. Нужно передать пользователю-получателю в параметрах текст сообщения (text) и senderId отправителя и recipientId получателя с помощью события `message:add`.
+- `message:history`, инициируется при открытии пользователем чата. Нужно вернуть пользователю список сообщений диалога с выбранным пользователем. Параметры: recipientId - id пользователя-получателя (чат с которым мы открыли), userId - id пользователя (свой). Список сообщений диалога отправить с помощью события `message:history`.
+- `disconnect`, инициируется при отключении пользователя. Нужно передать всем подключенным пользователям socketId отключившегося пользователя (с помощью события `users:leave`), и удалить пользователя из объекта всех подключенных пользователей.
 
-Отправляется FormData объект на сервер с картинкой товара и описанием
+6.  Подготовьте окружение и запустите проект на выбранном вами хостинге (например, [heroku](https://www.heroku.com/)).
 
-```js
-    в поле photo - Картинка товара
-    в поле name - Название товара
-    в поле price - Цена товара
-```
-
-#### POST запрос url = '/admin/skills'
-
-Отправляется поля на сервер с значением скиллов
-
-```js
-    в поле age - Возраст
-    в поле concerts - Концертов
-    в поле cities - Число городов
-    в поле years - Лет на сцене
-```
-
-##### Домашние задание №3 - реализовать серверную часть на [Express.js](http://expressjs.com/ru/)
-
-##### Домашние задание №4 - реализовать серверную часть на [Koa.js](http://koajs.com/)
-
-Данные хранить на сервере в JSON файле, можно использовать пакет [nconf](https://www.npmjs.com/package/nconf) или [LowDB](https://github.com/typicode/lowdb) на свое усмотрение
-
-### Примечание
-
-- модульный сборщик browserify для клиентского js. ES6 подключено.
-- обратите внимание, что в файлах template.pug
-
-```jade
-    link(rel="stylesheet" href="/assets/css/foundation%=suffix=%.css%=version=%")
-    link(rel="stylesheet" href="/assets/css/app%=suffix=%.css%=version=%")
-
-    script(src="/assets/js/foundation%=suffix=%.js%=version=%" defer)
-    script(src="/assets/js/app%=suffix=%.js%=version=%" defer)
-```
-
-%=suffix=% и %=version=% подставляются автоматически сборкой и заменяет их
-
-```html
-<link rel="stylesheet" href="/assets/css/foundation.min.css?rel=0.0.1" />
-<link rel="stylesheet" href="/assets/css/app.min.css?rel=0.0.1" />
-<script src="/assets/js/foundation.min.js?rel=0.0.1" defer></script>
-<script src="/assets/js/app.min.js?rel=0.0.1" defer></script>
-```
-
-Вам при переносе в проект шаблонов Pug надо будет заменить самостоятельно
-
-```jade
-    link(rel="stylesheet" href="/assets/css/foundation.min.css")
-    link(rel="stylesheet" href="/assets/css/app.min.css")
-
-    script(src="/assets/js/foundation.min.js" defer)
-    script(src="/assets/js/app.min.js" defer)
-```
-
-- jQuery есть и можно использовать
-- JS не используется для отправки форм, все выполняется нативно браузером. Хотите пишите самостоятельно клиентский код
-- Для ответов с сервера есть поле .status в каждой форме. Чтобы туда отправлять ответы от сервера используйте пакет [connect-flash](https://www.npmjs.com/package/connect-flash)
-- проект можно немного подпиливать под себя
+**Дополнительное задание 1**: обеспечьте при необходимости сжатие картинок, загружаемых пользователями, и их обрезку до квадратных пропорций (для этого можно использовать [jimp](https://github.com/oliver-moran/jimp)).
+**Дополнительное задание 2**: обеспечьте возможность работы приложения в 2 режимах - `development` и `producton`. В `development` режиме приложение должно быть подключено к локальной базе данных, в то время как в `producton` режиме - к удаленной, которая и будет использоваться при работе на хостинге.
