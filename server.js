@@ -2,7 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
-const fileUpload = require('express-fileupload');
+// const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
@@ -13,9 +13,9 @@ const PORT = process.env.PORT;
 
 const app = express();
 
-//----------------------
-//--- MongoDB START ----
-//----------------------
+// ----------------------
+// --- MongoDB START ----
+// ----------------------
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
@@ -34,42 +34,35 @@ const userScheme = new Schema({
    },
    surName: String,
    username: String,
-   password: String
+   password: String,
+   accessToken: String,
+   refreshToken: String,
+   accessTokenExpiredAt: Date,
+   refreshTokenExpiredAt: Date
+});
+
+const newsScheme = new Schema({
+   id: mongoose.Schema.Types.ObjectId,
+   created_at: Date,
+   text: String,
+   title: String,
+   user: {
+      firstName: String,
+      id: String,
+      image: String,
+      middleName: String,
+      surName: String,
+      username: String
+   }
 });
 
 mongoose.connect('mongodb://localhost:27017/usersdb', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const User = mongoose.model('users', userScheme);
-// const user = new User({
-//    firstName: "Viktar",
-//    surName: "Daniliuk",
-//    username: "DVS"
-// });
-
-// user.save()
-//    .then(function (doc) {
-//       console.log("Сохраненный объект: ", doc);
-//       mongoose.disconnect();
-//    })
-//    .catch(function (err) {
-//       console.log(err);
-//       mongoose.disconnect();
-//    });
-
-// User.remove({ 'firstName': 'Ivan'}, function (err, person) {
-//    if (err) return handleError(err);
-// });
-
-// User.find({ 'firstName': 'Viktar'}, function (err, user) {
-//    if (err) throw err;
-
-//    console.log('User: ',user);
-// });
-//----------------------
-//---- MongoDB END -----
-//----------------------
-
-
+const News = mongoose.model('news', newsScheme);
+// ----------------------
+// ---- MongoDB END -----
+// ----------------------
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -101,8 +94,6 @@ passport.use(
          User.findOne({ 'username': username }, function (err, user) {
             if (err) throw err;
 
-            // console.log('user: ', userPassword);
-            // console.log('user: ', user.password);
             if (userPassword === user.password) {
                console.log('Password is correct!');
                return done(null, user);
@@ -139,25 +130,45 @@ app.use(function (req, res, next) {
 
    next();
 });
+app.get('/api/profile', function (req, res) {
+
+   User.findOne({ 'accessToken': req.headers.authorization }, function (err, user) {
+      if (err) throw err;
+
+      return res.status(200).json({
+         firstName: user.firstName,
+         id: user._id,
+         image: user.image,
+         middleName: user.middleName,
+         permission: { ...user.permission },
+         surName: user.surName,
+         username: user.username
+      });
+   });
+});
 // на все get-запросы '/' отправляем index.html
 app.get('/', function (req, res) {
    res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 // обработка запроса на регистрацию
 app.post('/api/registration', function (req, res) {
-   // console.log(req.body);
 
    const user = new User({
       firstName: req.body.firstName,
       surName: req.body.surName,
       middleName: req.body.middleName,
       username: req.body.username,
-      password: req.body.password
+      password: req.body.password,
+      permission: {
+         chat: { C: true, R: true, U: true, D: true },
+         news: { C: false, R: true, U: false, D: false },
+         settings: { C: false, R: false, U: false, D: false }
+      }
    });
 
    user.save()
       .then(function (doc) {
-         console.log("Сохраненный объект: ", doc);
+         console.log('Сохраненный объект: ', doc);
          mongoose.disconnect();
       })
       .catch(function (err) {
@@ -169,17 +180,8 @@ app.post('/api/registration', function (req, res) {
       username: req.body.username,
       surName: req.body.surName,
       firstName: req.body.firstName,
-      middleName: req.body.middleName,
-      // permission: {
-         // chat: { C: true, R: true, U: true, D: true },
-         // news: { C: false, R: true, U: false, D: false },
-         // settings: { C: false, R: false, U: false, D: false }
-      // },
-      // acceptToken: 'string',
-      // refreshToken: 'string',
-      // accessTokenExpiredAt: 'string',
-      // refreshTokenExpiredAt: 'string',
-   })
+      middleName: req.body.middleName
+   });
 });
 // обработка запроса на логирование
 app.post('/api/login', function (req, res, next) {
@@ -189,106 +191,106 @@ app.post('/api/login', function (req, res, next) {
       }
       if (!user) {
          return res.send('Укажите правильный логин и пароль!');
-      }
+      };
+
+      const tokens = {
+         accessToken: uuidv4(),
+         refreshToken: uuidv4(),
+         accessTokenExpiredAt: new Date(+new Date() + 86400000),
+         refreshTokenExpiredAt: new Date(+new Date() + 7200000),
+      };
+
+      User.updateOne(
+         { 'username': user.username }, 
+         {$set: {...tokens }},
+         function(err, data) {
+            if (err) throw err;
+
+            console.log(data);
+         }
+      );
+            
       req.login(user, err => {
          return res.status(200).json({
             firstName: user.firstName,
             id: user._id,
             image: user.image,
             middleName: user.middleName,
-            permission: {
-               chat: { C: true, R: true, U: true, D: true },
-               news: { C: false, R: true, U: false, D: false },
-               settings: { C: false, R: false, U: false, D: false }
-            },
+            permission: { ...user.permission },
             surName: user.surName,
             username: user.username,
 
-            accessToken: uuidv4(),
-            refreshToken: uuidv4(),
-            accessTokenExpiredAt: new Date(+new Date() + 86400000),
-            refreshTokenExpiredAt: new Date(+new Date() + 7200000),
+            ...tokens
          });
       });
    })(req, res, next);
 });
 
 app.post('/api/refresh-token', function (req, res) {
-   
    console.log(req.body);
 });
+// обработка запроса на получение новостей
+app.get('/api/news', function(req, res) {
 
-// app.get('/login', function (req, res) {
-//    res.render('login', { msgslogin: req.flash('msgslogin')[0] });
-// });
+   News.find(function (err, news) {
+      if (err) throw err;
 
-// app.post('/login', function (req, res) {
-//    const storage = require('../server/storage/storage');
-//    const adminData = storage.getAdminData().admin[0];
-//    console.log('req.body: ', req.body);
-   
-//    if (req.body.email === adminData.email && req.body.password === adminData.password) {
-//       req.flash('msgslogin', 'Логирование прошло успешно.');
-//       req.session.isAuth = true;
-//       return res.redirect(301, '/admin');
-//    }
-//    res.render('login');
-//    // res.redirect(301, '/');
-// });
+      res.status(200).json(news);
+   })
+});
+// обработка запроса на создание новой новости
+app.post('/api/news', function(req, res) {
+   const { text, title } = req.body;
 
-// app.get('/admin', function (req, res) {
-//    const storage = require('../server/storage/storage');
+   User.findOne({ 'accessToken': req.headers.authorization }, function (err, user) {
+      if (err) throw err;
+      
+      return user;
+   })
+   .then((user = {}) => {
+      const news = new News({
+         created_at: new Date(),
+         text: text,
+         title: title,
+         user: {
+            firstName: user.firstName,
+            id: user._id,
+            image: user.image,
+            middleName: user.middleName,
+            surName: user.surName,
+            username: user.username
+         }
+      });
 
-//    if (req.session.isAuth) {
-//       res.render('admin', { skills: storage.getSkills().skills, msgskill: req.flash('msgskill')[0], msgfile: req.flash('msgfile')[0] });
-//    }
-// });
+      news.save()
+         .then(function (doc) {
+            
+            return doc;
+         })
+         .then((doc) => {
+            News.find(function (err, news) {
+               if (err) throw err;
+               
+               mongoose.disconnect();
+               return res.status(200).json(news);
+            });
+         })
+         .catch(function (err) {
+            console.log(err);
+            mongoose.disconnect();
+         });
+   })
+});
+// !!!!!!!НЕ РАБОТАЕТ!!!!!!!!
+app.patch('/api/profile', function(req, res) {
 
-// app.post('/admin/skills', function (req, res) {
-//    console.log(req.body);
-//    const storage = require('../server/storage/storage')
-
-//    storage.setSkills(req.body);
-
-//    req.flash('msgskill', 'Данные изменены успешно.');
-//    res.redirect(301, '/admin');
-// });
-
-// app.use('/admin/upload', fileUpload(), function (req, res) {
-//    const storage = require('../server/storage/storage');
-//    const product = {};
-   
-//    if (!req.files || Object.keys(req.files).length === 0) {
-//       return res.status(400).send('No files were uploaded.');
-//    };
-   
-//    let sampleFile = req.files.photo;
-   
-//    product.src = `./img/products/${req.files.photo.name}`;
-//    product.name = req.body.name;
-//    product.price = req.body.price;
-//    storage.setProducts(product);
-
-//    sampleFile.mv(`${__dirname}/public/img/products/${req.files.photo.name}`, function(err) {
-//       if (err) return res.status(500).send(err);
-//    });
-   
-//    req.flash('msgfile', 'Продукт добавлен успешно.');
-//    res.redirect(301, '/admin');
-// });
-
-// app.use((req, res, next) => {
-//    let err = new Error('Not Found');
-
-//    err.status = 404;
-//    next(err);
-// });
-
-// app.use((err, req, res, next) => {
-//    res.status(err.status || 500);
-//    res.render('error', { message: err.message, error: err });
-// });
+   if (req.isAuthenticated()) {
+      
+   } else {
+      res.redirect(301, '/');
+   }
+});
 
 app.listen(PORT, () => {
-   console.log(`Server: localhost:${PORT}`)
+   console.log(`Server: localhost:${PORT}`);
 });
