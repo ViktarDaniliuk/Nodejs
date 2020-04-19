@@ -1,5 +1,7 @@
 require('dotenv').config();
 const express = require('express');
+const app = express();
+const server = require('http').Server(app);
 const path = require('path');
 const bodyParser = require('body-parser');
 // const fileUpload = require('express-fileupload');
@@ -9,9 +11,8 @@ const LocalStrategy = require('passport-local').Strategy;
 const session = require('express-session');
 const FileStore = require('session-file-store')(session);
 const uuidv4 = require('uuid/v4');
+const io = require('socket.io')(server);
 const PORT = process.env.PORT;
-
-const app = express();
 
 // ----------------------
 // --- MongoDB START ----
@@ -164,6 +165,14 @@ app.get('/api/profile', function (req, res) {
          surName: user.surName,
          username: user.username
       });
+   });
+});
+// возврат всех пользователей из базы
+app.get('/api/users', function(req, res) {
+   User.find(function (err, users) {
+      if (err) throw err;
+
+      res.status(200).json(users);
    });
 });
 // на все get-запросы '/' отправляем index.html
@@ -331,42 +340,6 @@ app.patch('/api/profile', function(req, res) {
    }
 });
 
-// app.get('/login', function (req, res) {
-//    res.render('login', { msgslogin: req.flash('msgslogin')[0] });
-// });
-
-// app.post('/login', function (req, res) {
-//    const storage = require('../server/storage/storage');
-//    const adminData = storage.getAdminData().admin[0];
-//    console.log('req.body: ', req.body);
-
-//    if (req.body.email === adminData.email && req.body.password === adminData.password) {
-//       req.flash('msgslogin', 'Логирование прошло успешно.');
-//       req.session.isAuth = true;
-//       return res.redirect(301, '/admin');
-//    }
-//    res.render('login');
-//    // res.redirect(301, '/');
-// });
-
-// app.get('/admin', function (req, res) {
-//    const storage = require('../server/storage/storage');
-
-//    if (req.session.isAuth) {
-//       res.render('admin', { skills: storage.getSkills().skills, msgskill: req.flash('msgskill')[0], msgfile: req.flash('msgfile')[0] });
-//    }
-// });
-
-// app.post('/admin/skills', function (req, res) {
-//    console.log(req.body);
-//    const storage = require('../server/storage/storage')
-
-//    storage.setSkills(req.body);
-
-//    req.flash('msgskill', 'Данные изменены успешно.');
-//    res.redirect(301, '/admin');
-// });
-
 // app.use('/admin/upload', fileUpload(), function (req, res) {
 //    const storage = require('../server/storage/storage');
 //    const product = {};
@@ -402,6 +375,62 @@ app.patch('/api/profile', function(req, res) {
 //    res.render('error', { message: err.message, error: err });
 // });
 
-app.listen(PORT, () => {
+const clients = {};
+
+io.on('connection', socket => {
+   clients[socket.id] = {};
+
+   User.find(function (err, users) {
+      if (err) throw err;
+
+      return users;
+   })
+   .then(users => {
+      socket.emit('users:list', [ ...users ]);
+   });
+
+   socket.emit('users:add', [  ]);
+
+   socket.emit('message:history', [  ]);
+
+   socket.on('users:connect', data => {
+      console.log('users:connect data: ', data);
+      User.find({ username: data.username }, function (err, user) {
+         if (err) throw err;
+   
+         return user;
+      })
+      .then(user => {
+         clients[socket.id]['username'] = user[0].username;
+         clients[socket.id]['socketId'] = socket.id;
+         clients[socket.id]['userId'] = user[0]._id;
+         clients[socket.id]['activeRoom'] = null;
+         console.log('416: clients: ', clients);
+      });
+   });
+
+   socket.on('message:history', data => {
+      console.log('message:history data: ', data);
+   });
+
+   socket.on('message:add', message => {
+      // console.log('message:add data: ', message);
+      // console.log('message:add author: ', socket.id);
+      // const id = socket.id;
+      // console.log('message:add id: ', id);
+      // console.log('message:add clients: ', clients[id][socketId]);
+      socket.emit('message:add', message, socket.id);
+      socket.broadcast.emit('message:add', message);
+   });
+
+   socket.on('disconnect', () => {
+      const id = socket.id;
+
+      socket.broadcast.emit('users:leave', clients[id]['socketId']);
+      delete clients[id];
+   });
+});
+
+server.listen(PORT, () => {
    console.log(`Server: localhost:${PORT}`);
 });
