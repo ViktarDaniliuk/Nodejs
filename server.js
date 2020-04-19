@@ -55,11 +55,30 @@ const newsScheme = new Schema({
       username: String
    }
 });
-
+app.use((req, res, next) => {console.log('58: ', req.url); next()});
 mongoose.connect('mongodb://localhost:27017/usersdb', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const User = mongoose.model('users', userScheme);
 const News = mongoose.model('news', newsScheme);
+
+// News.deleteOne({ _id: '5e9a08db75cfdf37f4e88583'}, function (err, person) {
+//    if (err) return handleError(err);
+
+//    console.log(person);
+
+// });
+
+// News.find(function (err, news) {
+//    if (err) throw err;
+
+//    console.log('News: ',news);
+// });
+
+// User.find(function (err, users) {
+//    if (err) throw err;
+
+//    console.log('Users: ',users);
+// });
 // ----------------------
 // ---- MongoDB END -----
 // ----------------------
@@ -130,6 +149,7 @@ app.use(function (req, res, next) {
 
    next();
 });
+
 app.get('/api/profile', function (req, res) {
 
    User.findOne({ 'accessToken': req.headers.authorization }, function (err, user) {
@@ -168,7 +188,7 @@ app.post('/api/registration', function (req, res) {
 
    user.save()
       .then(function (doc) {
-         console.log('Сохраненный объект: ', doc);
+         console.log('191: Сохраненный объект: ', doc);
          mongoose.disconnect();
       })
       .catch(function (err) {
@@ -206,7 +226,7 @@ app.post('/api/login', function (req, res, next) {
          function(err, data) {
             if (err) throw err;
 
-            console.log(data);
+            console.log('229: ', data);
          }
       );
             
@@ -225,9 +245,10 @@ app.post('/api/login', function (req, res, next) {
       });
    })(req, res, next);
 });
-
+// !!!!!!!НЕ РАБОТАЕТ!!!!!!!!
+// обработка запроса на обновление токена доступа
 app.post('/api/refresh-token', function (req, res) {
-   console.log(req.body);
+   console.log('251: ', req.body);
 });
 // обработка запроса на получение новостей
 app.get('/api/news', function(req, res) {
@@ -238,13 +259,19 @@ app.get('/api/news', function(req, res) {
       res.status(200).json(news);
    })
 });
+app.patch('/api/news/:id', function(req, res) {
+   console.log('312: ', req.params);
+});
 // обработка запроса на создание новой новости
 app.post('/api/news', function(req, res) {
    const { text, title } = req.body;
-
+   console.log('265: req.url: ', req.url);
+   console.log('266: news title: ', title);
+   console.log('267: news text: ', text);
+   console.log('268: accessToken: ', req.headers.authorization);
    User.findOne({ 'accessToken': req.headers.authorization }, function (err, user) {
       if (err) throw err;
-      
+      console.log('271: user: ', user);
       return user;
    })
    .then((user = {}) => {
@@ -261,15 +288,18 @@ app.post('/api/news', function(req, res) {
             username: user.username
          }
       });
+      console.log('288: news: ', news);
 
       news.save()
          .then(function (doc) {
-            
+            console.log("292: Сохраненный объект: ", doc);
             return doc;
          })
          .then((doc) => {
+            console.log('296: Try to find all news');
             News.find(function (err, news) {
                if (err) throw err;
+               console.log('299: All news: ', news);
                
                mongoose.disconnect();
                return res.status(200).json(news);
@@ -279,17 +309,98 @@ app.post('/api/news', function(req, res) {
             console.log(err);
             mongoose.disconnect();
          });
-   })
+   });
+});
+// обработка запроса на изменение новости
+// app.patch('/api/news/:id', function(req, res) {
+//    console.log('312: ', req.params);
+// });
+// обработка запроса на удаление новости
+app.delete('/api/news/:id', function(req, res) {
+   console.log('312: ', req.params);
 });
 // !!!!!!!НЕ РАБОТАЕТ!!!!!!!!
 app.patch('/api/profile', function(req, res) {
 
+   console.log('317: req.body: ', req.body);
    if (req.isAuthenticated()) {
+      console.log('319: req.body: ', req.body);
       
    } else {
       res.redirect(301, '/');
    }
 });
+
+// app.get('/login', function (req, res) {
+//    res.render('login', { msgslogin: req.flash('msgslogin')[0] });
+// });
+
+// app.post('/login', function (req, res) {
+//    const storage = require('../server/storage/storage');
+//    const adminData = storage.getAdminData().admin[0];
+//    console.log('req.body: ', req.body);
+
+//    if (req.body.email === adminData.email && req.body.password === adminData.password) {
+//       req.flash('msgslogin', 'Логирование прошло успешно.');
+//       req.session.isAuth = true;
+//       return res.redirect(301, '/admin');
+//    }
+//    res.render('login');
+//    // res.redirect(301, '/');
+// });
+
+// app.get('/admin', function (req, res) {
+//    const storage = require('../server/storage/storage');
+
+//    if (req.session.isAuth) {
+//       res.render('admin', { skills: storage.getSkills().skills, msgskill: req.flash('msgskill')[0], msgfile: req.flash('msgfile')[0] });
+//    }
+// });
+
+// app.post('/admin/skills', function (req, res) {
+//    console.log(req.body);
+//    const storage = require('../server/storage/storage')
+
+//    storage.setSkills(req.body);
+
+//    req.flash('msgskill', 'Данные изменены успешно.');
+//    res.redirect(301, '/admin');
+// });
+
+// app.use('/admin/upload', fileUpload(), function (req, res) {
+//    const storage = require('../server/storage/storage');
+//    const product = {};
+
+//    if (!req.files || Object.keys(req.files).length === 0) {
+//       return res.status(400).send('No files were uploaded.');
+//    };
+
+//    let sampleFile = req.files.photo;
+
+//    product.src = `./img/products/${req.files.photo.name}`;
+//    product.name = req.body.name;
+//    product.price = req.body.price;
+//    storage.setProducts(product);
+
+//    sampleFile.mv(`${__dirname}/public/img/products/${req.files.photo.name}`, function(err) {
+//       if (err) return res.status(500).send(err);
+//    });
+
+//    req.flash('msgfile', 'Продукт добавлен успешно.');
+//    res.redirect(301, '/admin');
+// });
+
+// app.use((req, res, next) => {
+//    let err = new Error('Not Found');
+
+//    err.status = 404;
+//    next(err);
+// });
+
+// app.use((err, req, res, next) => {
+//    res.status(err.status || 500);
+//    res.render('error', { message: err.message, error: err });
+// });
 
 app.listen(PORT, () => {
    console.log(`Server: localhost:${PORT}`);
