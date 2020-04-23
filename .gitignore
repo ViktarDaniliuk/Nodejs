@@ -5,7 +5,8 @@
 # Logs
 logs
 *.log
-npm-debug.log*
+npm-debug.log
+.DS_Store
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
@@ -42,7 +43,7 @@ bower_components
 build/Release
 
 # Dependency directories
-node_modules/
+/node_modules
 jspm_packages/
 
 # TypeScript v1 declaration files
@@ -67,7 +68,7 @@ typings/
 .yarn-integrity
 
 # dotenv environment variables file
-.env
+/*.env
 .env.test
 
 # parcel-bundler cache (https://parceljs.org/)
