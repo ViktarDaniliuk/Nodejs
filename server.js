@@ -116,7 +116,7 @@ passport.deserializeUser((id, done) => {
 app.use(passport.initialize());
 app.use(passport.session());
 // отдаем статические файлы
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'public')));
 // на все запросы отправляем заголовки
 app.use(function (req, res, next) {
    res.setHeader('Access-Control-Allow-Origin', '*');
@@ -153,7 +153,7 @@ app.get('/api/users', function(req, res) {
 });
 // на все get-запросы '/' отправляем index.html
 app.get('/', function (req, res) {
-   res.sendFile(path.join(__dirname, 'build', 'index.html'));
+   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 // обработка запроса на регистрацию
 app.post('/api/registration', function (req, res) {
