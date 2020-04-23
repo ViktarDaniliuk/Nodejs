@@ -55,7 +55,6 @@ const newsScheme = new Schema({
 });
 
 mongoose.connect('mongodb://localhost:27017/usersdb', { useNewUrlParser: true, useUnifiedTopology: true });
-// mongoose.connect('mongodb://vdaniliuk.ru/usersdb', { useNewUrlParser: true, useUnifiedTopology: true });
 
 const User = mongoose.model('users', userScheme);
 const News = mongoose.model('news', newsScheme);
